@@ -3,9 +3,13 @@ ARG PHP_VERSION
 FROM php:${PHP_VERSION}-fpm
 
 # install php-ext
-RUN apt-get update && apt-get install -y git wget gnupg vim unzip libxml2-dev libpng-dev libzip-dev libonig-dev default-mysql-client libldap2-dev\
+RUN apt-get update && apt-get install -y git wget gnupg vim unzip lsb-release inetutils-tools libxml2-dev libpng-dev libzip-dev libonig-dev libldap2-dev\
   && docker-php-ext-install mbstring dom gd zip pdo_mysql ftp ldap\
   && apt-get clean
+RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb
+RUN DEBIAN_FRONTEND=noninteractive dpkg -i mysql-apt-config_0.8.29-1_all.deb
+RUN apt-get update
+RUN apt install -y mysql-client
 
 # install pre sql server driver
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
