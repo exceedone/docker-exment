@@ -37,7 +37,7 @@ mysql-init:
 	# fix Git safe.directory
 	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment
 	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment/exment
-	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer update
+	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
 	docker compose -f docker-compose.yml exec -T php composer dump-autoload
 	docker compose -f docker-compose.yml exec -T php php artisan package:discover
 	docker compose -f docker-compose.yml exec -T php cp .env.mysql .env
@@ -51,7 +51,7 @@ mariadb-init:
 	# fix Git safe.directory
 	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment
 	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment/exment
-	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer update
+	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
 	docker compose -f docker-compose.yml exec -T php composer dump-autoload
 	docker compose -f docker-compose.yml exec -T php php artisan package:discover
 	docker compose -f docker-compose.yml exec -T php cp .env.mariadb .env
@@ -71,7 +71,7 @@ sqlsrv-init:
 	# fix Git safe.directory
 	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment
 	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment/exment
-	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer update
+	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
 	docker compose -f docker-compose.yml exec -T php composer dump-autoload
 	docker compose -f docker-compose.yml exec -T php php artisan package:discover
 	docker compose -f docker-compose.yml exec -T php cp .env.sqlsrv .env
