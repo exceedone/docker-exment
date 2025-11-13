@@ -1,29 +1,45 @@
 mysql-up:
 	docker compose -f docker-compose.yml -f docker-compose.mysql.yml up -d
+
 mariadb-up:
 	docker compose -f docker-compose.yml -f docker-compose.mariadb.yml up -d
+
 sqlsrv-up:
 	docker compose -f docker-compose.yml -f docker-compose.sqlsrv.yml up -d
+
 php:
-	docker compose  -f docker-compose.yml exec php bash
+	docker compose -f docker-compose.yml exec php bash
+
 down:
-	docker compose  -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.sqlsrv.yml -f docker-compose.mariadb.yml  down
+	docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.sqlsrv.yml -f docker-compose.mariadb.yml down
+
 destroy:
-	docker compose  -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.sqlsrv.yml -f docker-compose.mariadb.yml down --rmi all --volumes --remove-orphans
+	docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.sqlsrv.yml -f docker-compose.mariadb.yml down --rmi all --volumes --remove-orphans
+
 ps:
-	docker compose  -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.sqlsrv.yml -f docker-compose.mariadb.yml ps
+	docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.sqlsrv.yml -f docker-compose.mariadb.yml ps
+
 logs:
-	docker compose  -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.sqlsrv.yml -f docker-compose.mariadb.yml logs
+	docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.sqlsrv.yml -f docker-compose.mariadb.yml logs
+
 exec:
-	docker compose  -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.sqlsrv.yml -f docker-compose.mariadb.yml exec
+	docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.sqlsrv.yml -f docker-compose.mariadb.yml exec
+
 logs-watch:
 	docker compose logs --follow
+
+# --- INIT TARGETS ---
+
 mysql-init:
 	@make down
 	@make mysql-up
 	docker compose -f docker-compose.yml exec -T php chown www-data:www-data -R .
+	# fix Git safe.directory
+	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment
+	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment/exment
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer update
 	docker compose -f docker-compose.yml exec -T php composer dump-autoload
+	docker compose -f docker-compose.yml exec -T php php artisan package:discover
 	docker compose -f docker-compose.yml exec -T php cp .env.mysql .env
 	docker compose -f docker-compose.yml exec -T php php artisan key:generate
 	docker compose -f docker-compose.yml exec -T php php artisan passport:key --force
@@ -32,8 +48,12 @@ mariadb-init:
 	@make down
 	@make mariadb-up
 	docker compose -f docker-compose.yml exec -T php chown www-data:www-data -R .
+	# fix Git safe.directory
+	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment
+	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment/exment
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer update
 	docker compose -f docker-compose.yml exec -T php composer dump-autoload
+	docker compose -f docker-compose.yml exec -T php php artisan package:discover
 	docker compose -f docker-compose.yml exec -T php cp .env.mariadb .env
 	docker compose -f docker-compose.yml exec -T php php artisan key:generate
 	docker compose -f docker-compose.yml exec -T php php artisan passport:key --force
@@ -48,8 +68,12 @@ sqlsrv-init:
 	@make ps
 	@make logs
 	docker compose -f docker-compose.yml exec -T php chown www-data:www-data -R .
+	# fix Git safe.directory
+	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment
+	docker compose -f docker-compose.yml exec -T php git config --global --add safe.directory /var/www/exment/exment
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer update
 	docker compose -f docker-compose.yml exec -T php composer dump-autoload
+	docker compose -f docker-compose.yml exec -T php php artisan package:discover
 	docker compose -f docker-compose.yml exec -T php cp .env.sqlsrv .env
 	docker compose -f docker-compose.yml exec -T php php artisan key:generate
 	docker compose -f docker-compose.yml exec -T php php artisan passport:key --force
