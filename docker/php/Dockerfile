@@ -15,7 +15,7 @@ RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor
   && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18
 
 # install sql server driver
-RUN pecl install sqlsrv && pecl install pdo_sqlsrv && docker-php-ext-enable sqlsrv && docker-php-ext-enable pdo_sqlsrv
+RUN pecl install sqlsrv-5.12.0 && pecl install pdo_sqlsrv-5.12.0 && docker-php-ext-enable sqlsrv && docker-php-ext-enable pdo_sqlsrv
 
 # install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
