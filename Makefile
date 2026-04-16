@@ -21,7 +21,7 @@ logs-watch:
 mysql-init:
 	@make down
 	@make mysql-up
-	docker compose -f docker-compose.yml exec -T php chown www-data:www-data -R .
+	docker compose -f docker-compose.yml exec -T php find . -name .git -prune -o -print -exec chown www-data:www-data {} +
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
 	docker compose -f docker-compose.yml exec -T php cp .env.mysql .env
 	docker compose -f docker-compose.yml exec -T php php artisan key:generate
@@ -30,7 +30,7 @@ mysql-init:
 mariadb-init:
 	@make down
 	@make mariadb-up
-	docker compose -f docker-compose.yml exec -T php chown www-data:www-data -R .
+	docker compose -f docker-compose.yml exec -T php find . -name .git -prune -o -print -exec chown www-data:www-data {} +
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
 	docker compose -f docker-compose.yml exec -T php cp .env.mariadb .env
 	docker compose -f docker-compose.yml exec -T php php artisan key:generate
@@ -42,10 +42,10 @@ sqlsrv-init:
 	@make ps
 	@make logs
 	sleep 30
-	docker compose -f docker-compose.sqlsrv.yml run -T sqlsrv-create-db
+	docker compose -f docker-compose.yml -f docker-compose.sqlsrv.yml run -T sqlsrv-create-db
 	@make ps
 	@make logs
-	docker compose -f docker-compose.yml exec -T php chown www-data:www-data -R .
+	docker compose -f docker-compose.yml exec -T php find . -name .git -prune -o -print -exec chown www-data:www-data {} +
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
 	docker compose -f docker-compose.yml exec -T php cp .env.sqlsrv .env
 	docker compose -f docker-compose.yml exec -T php php artisan key:generate

@@ -8,14 +8,15 @@ RUN apt-get update && apt-get install -y git wget gnupg vim unzip libxml2-dev li
   && apt-get clean
 
 # install pre sql server driver
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
-  && curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | tee /etc/apt/sources.list.d/msprod.list \
+RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
+  && curl -fsSL https://packages.microsoft.com/config/debian/12/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \
   && apt-get update \
-  && apt-get install -y unixodbc-dev=2.3.7 unixodbc=2.3.7 odbcinst1debian2=2.3.7 odbcinst=2.3.7 libgssapi-krb5-2 \
-  && ACCEPT_EULA=Y apt-get install -y msodbcsql17 mssql-tools
+  && apt-get install -y unixodbc-dev libgssapi-krb5-2 \
+  && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 \
+  && apt-get clean
 
 # install sql server driver
-RUN pecl install sqlsrv && pecl install pdo_sqlsrv && docker-php-ext-enable sqlsrv && docker-php-ext-enable pdo_sqlsrv
+RUN pecl install sqlsrv-5.12.0 && pecl install pdo_sqlsrv-5.12.0 && docker-php-ext-enable sqlsrv && docker-php-ext-enable pdo_sqlsrv
 
 # install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
