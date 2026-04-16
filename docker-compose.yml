@@ -22,6 +22,7 @@ services:
     volumes:
       - ./exment-boilerplate:/var/www/exment
       - ./docker/php/volumes/php.ini:/usr/local/etc/php/php.ini
+      - ./docker/php/volumes/mysql-client.cnf:/etc/mysql/conf.d/client.cnf
     env_file: .env
     networks:
       - exment-network

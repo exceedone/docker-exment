@@ -1,0 +1,8 @@
+[mysql]
+ssl=0
+
+[mysqldump]
+ssl=0
+quick
+quote-names
+max_allowed_packet = 16M
