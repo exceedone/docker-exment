@@ -59,12 +59,12 @@ EXMENT_TESTS=./vendor/exceedone/exment/tests
 # Run unit tests with --coverage-php so the merge step can pick them up.
 test-coverage-unit:
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=0 php \
-	  bash -c "mkdir -p $(COV_DIR) && php artisan exment:inittest --yes && php -d memory_limit=1024M vendor/bin/phpunit $(EXMENT_TESTS)/Unit --coverage-php $(COV_DIR)/unit.cov"
+	  bash -c "mkdir -p $(COV_DIR) && php artisan exment:inittest --yes && php -d pcov.enabled=1 -d memory_limit=1024M vendor/bin/phpunit $(EXMENT_TESTS)/Unit --coverage-php $(COV_DIR)/unit.cov"
 
 # Run feature tests with --coverage-php.
 test-coverage-feature:
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=0 php \
-	  bash -c "mkdir -p $(COV_DIR) && php artisan exment:inittest --yes && php -d memory_limit=1024M vendor/bin/phpunit $(EXMENT_TESTS)/Feature --coverage-php $(COV_DIR)/feature.cov"
+	  bash -c "mkdir -p $(COV_DIR) && php artisan exment:inittest --yes && php -d pcov.enabled=1 -d memory_limit=1024M vendor/bin/phpunit $(EXMENT_TESTS)/Feature --coverage-php $(COV_DIR)/feature.cov"
 
 # Merge .cov files and emit clover/html/text reports under $(COV_DIR)/merged/.
 test-coverage-merge:
