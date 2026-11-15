@@ -1,3 +1,7 @@
+.PHONY: mysql-up mariadb-up sqlsrv-up php down destroy ps logs exec logs-watch
+.PHONY: mysql-init mariadb-init sqlsrv-init
+.PHONY: test-coverage-unit test-coverage-feature test-coverage-merge test-coverage test-browser
+
 mysql-up:
 	docker compose -f docker-compose.yml -f docker-compose.mysql.yml up -d
 mariadb-up:
@@ -19,8 +23,8 @@ exec:
 logs-watch:
 	docker compose logs --follow
 mysql-init:
-	@make down
-	@make mysql-up
+	@$(MAKE) down
+	@$(MAKE) mysql-up
 	docker compose -f docker-compose.yml exec -T php bash -c "find . -path '*/.git' -prune -o -print0 | xargs -0 chown www-data:www-data"
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
 	docker compose -f docker-compose.yml exec -T php cp .env.mysql .env
@@ -28,8 +32,8 @@ mysql-init:
 	docker compose -f docker-compose.yml exec -T php php artisan passport:key --force
 
 mariadb-init:
-	@make down
-	@make mariadb-up
+	@$(MAKE) down
+	@$(MAKE) mariadb-up
 	docker compose -f docker-compose.yml exec -T php bash -c "find . -path '*/.git' -prune -o -print0 | xargs -0 chown www-data:www-data"
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
 	docker compose -f docker-compose.yml exec -T php cp .env.mariadb .env
@@ -37,14 +41,14 @@ mariadb-init:
 	docker compose -f docker-compose.yml exec -T php php artisan passport:key --force
 
 sqlsrv-init:
-	@make down
-	@make sqlsrv-up
-	@make ps
-	@make logs
+	@$(MAKE) down
+	@$(MAKE) sqlsrv-up
+	@$(MAKE) ps
+	@$(MAKE) logs
 	sleep 30
 	docker compose -f docker-compose.yml -f docker-compose.sqlsrv.yml run -T sqlsrv-create-db
-	@make ps
-	@make logs
+	@$(MAKE) ps
+	@$(MAKE) logs
 	docker compose -f docker-compose.yml exec -T php bash -c "find . -path '*/.git' -prune -o -print0 | xargs -0 chown www-data:www-data"
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
 	docker compose -f docker-compose.yml exec -T php cp .env.sqlsrv .env
@@ -72,9 +76,9 @@ test-coverage-merge:
 
 # One-shot: unit + feature + merge.
 test-coverage:
-	@make test-coverage-unit
-	@make test-coverage-feature
-	@make test-coverage-merge
+	@$(MAKE) test-coverage-unit
+	@$(MAKE) test-coverage-feature
+	@$(MAKE) test-coverage-merge
 
 # Browser tests segfault under PCOV; run them with pcov.enabled=0 and no coverage.
 test-browser:
