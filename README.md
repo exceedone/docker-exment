@@ -67,6 +67,27 @@ $ make sqlsrv-up
 
 The SQL Server `sa` password is `EXMENT_DOCKER_SQLSRV_ROOT_PASSWORD` in `.env`. It must be a complex password, and it must match `DB_PASSWORD` in `exment-boilerplate/.env.sqlsrv`.
 
+### Previews of Office files (optional)
+
+The file server of Exment can show Word, Excel and PowerPoint files as PDF. The conversion runs in a container of its own (`office`: [Gotenberg](https://gotenberg.dev/) with LibreOffice only), not in the PHP container.
+
+1. Add `-f docker-compose.office.yml` when you start the containers:
+
+    ```bash
+    $ docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.office.yml up -d
+    ```
+
+2. Add this line to `exment-boilerplate/.env`:
+
+    ```
+    EXMENT_FILE_SERVER_SOFFICE_URL=http://office:3000
+    ```
+
+- The converter opens no port to the outside. Only the PHP container reaches it, on an inner network that cannot reach the Internet, the cloud metadata or the database.
+- Its disk is read only and it works in memory; it keeps no file after a conversion.
+- Its limits are in `.env` (`EXMENT_DOCKER_OFFICE_*`): 1 CPU, 1 GB of memory, 120 seconds for a conversion, a queue of 10. When the queue is full it answers 429 and Exment asks again a little later.
+- The image is about 1.5 GB.
+
 ## Other commands
 
 | Command | Description |
