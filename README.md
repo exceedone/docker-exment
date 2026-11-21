@@ -86,6 +86,7 @@ The file server of Exment can show Word, Excel and PowerPoint files as PDF. The 
 - The converter opens no port to the outside. Only the PHP container reaches it, on an inner network that cannot reach the Internet, the cloud metadata or the database.
 - Its disk is read only and it works in memory; it keeps no file after a conversion.
 - Its limits are in `.env` (`EXMENT_DOCKER_OFFICE_*`): 1 CPU, 1 GB of memory, 120 seconds for a conversion, a queue of 10. When the queue is full it answers 429 and Exment asks again a little later.
+- Exment converts a file the first time its preview is opened (not when it is uploaded) and keeps the PDF; two people opening it at once start one conversion.
 - The image is about 1.5 GB.
 
 ## Other commands
