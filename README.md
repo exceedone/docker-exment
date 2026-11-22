@@ -45,6 +45,13 @@ $ make mysql-init
 $ make mysql-up
 ```
 
+To try a branch or a tag of Exment that is not released yet (for example the `7.2` branch), add `EXMENT_REF`.
+It clones or checks out Exment in `exment-boilerplate/exment` and exment-admin-core in `exment-boilerplate/exment-admin-core` (branch `EXMENT_ADMIN_CORE_REF`, default `master`), and installs them with `composer.dev.json`. The same works for `mariadb-init` and `sqlsrv-init`.
+
+```bash
+$ make mysql-init EXMENT_REF=7.2
+```
+
 ### MariaDB
 
 ```bash
