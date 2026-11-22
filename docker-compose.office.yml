@@ -1,0 +1,45 @@
+# A LibreOffice converter of its own, for the PDF previews of Office files in the file server of Exment (ISS01704).
+# Gotenberg with LibreOffice only (no Chromium). Use it with the other files, e.g.
+#   docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.office.yml up -d
+# and set in exment-boilerplate/.env:
+#   EXMENT_FILE_SERVER_SOFFICE_URL=http://office:3000
+#
+# - no port to the outside; only php reaches it, on an inner network (internal: no Internet, no cloud metadata, no database)
+# - its disk is read only, it works in memory (tmpfs) and keeps nothing after a conversion
+# - one conversion at a time, a queue of EXMENT_DOCKER_OFFICE_QUEUE (a full queue answers 429 and Exment asks again later)
+services:
+  office:
+    image: gotenberg/gotenberg:${EXMENT_DOCKER_OFFICE_VERSION-8.34.0}-libreoffice
+    command:
+      - gotenberg
+      - --api-timeout=${EXMENT_DOCKER_OFFICE_TIMEOUT-120}s
+      - --api-body-limit=${EXMENT_DOCKER_OFFICE_BODY_LIMIT-100MB}
+      - --api-disable-download-from
+      - --libreoffice-max-queue-size=${EXMENT_DOCKER_OFFICE_QUEUE-10}
+      - --libreoffice-restart-after=10
+      - --libreoffice-deny-private-ips
+      - --libreoffice-deny-public-ips
+      - --webhook-disable
+      - --pdfengines-disable-routes
+      - --prometheus-disable-collect
+      - --log-level=warn
+    read_only: true
+    tmpfs:
+      - /tmp:size=1g
+    cpus: ${EXMENT_DOCKER_OFFICE_CPUS-1}
+    mem_limit: ${EXMENT_DOCKER_OFFICE_MEMORY-1g}
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    networks:
+      - office-network
+
+  php:
+    networks:
+      - exment-network
+      - office-network
+
+networks:
+  exment-network:
+  office-network:
+    internal: true
