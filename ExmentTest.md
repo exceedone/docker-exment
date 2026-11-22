@@ -33,6 +33,12 @@ $ docker compose -f docker-compose.yml exec -T php cp composer.dev.lock composer
 $ make mysql-init
 ```
 
+ブランチやタグを指定するときは、`EXMENT_REF` を付けます。`exment-boilerplate/exment` と `exment-boilerplate/exment-admin-core`（`EXMENT_ADMIN_CORE_REF`、既定は `master`）を clone か checkout し、開発用の composer ファイルへの差し替えも行います（上の `cp` は要りません）。
+
+```bash
+$ make mysql-init EXMENT_REF=7.2
+```
+
 ## テストの実行
 
 ```bash
