@@ -1,5 +1,14 @@
 .PHONY: mysql-up mariadb-up sqlsrv-up php down destroy ps logs exec logs-watch
-.PHONY: mysql-init mariadb-init sqlsrv-init
+.PHONY: mysql-init mariadb-init sqlsrv-init exment-ref app-init
+
+# EXMENT_REF: install this branch or tag of Exment (for example 7.2, or 7.2.1) instead of the
+# release pinned in exment-boilerplate/composer.lock. It is cloned or checked out in
+# exment-boilerplate/exment (exment-admin-core: EXMENT_ADMIN_CORE_REF, default master, in
+# exment-boilerplate/exment-admin-core), and composer.dev.json / composer.dev.lock install them
+# from those folders. Example: make mysql-init EXMENT_REF=7.2
+EXMENT_REF ?=
+EXMENT_ADMIN_CORE_REF ?= master
+APP_DIR=exment-boilerplate
 .PHONY: test-coverage-unit test-coverage-feature test-coverage-merge test-coverage test-browser
 
 mysql-up:
@@ -23,24 +32,19 @@ exec:
 logs-watch:
 	docker compose logs --follow
 mysql-init:
+	@$(MAKE) exment-ref
 	@$(MAKE) down
 	@$(MAKE) mysql-up
-	docker compose -f docker-compose.yml exec -T php bash -c "find . -path '*/.git' -prune -o -print0 | xargs -0 chown www-data:www-data"
-	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
-	docker compose -f docker-compose.yml exec -T php cp .env.mysql .env
-	docker compose -f docker-compose.yml exec -T php php artisan key:generate
-	docker compose -f docker-compose.yml exec -T php php artisan passport:key --force
+	@$(MAKE) app-init ENV_FILE=.env.mysql
 
 mariadb-init:
+	@$(MAKE) exment-ref
 	@$(MAKE) down
 	@$(MAKE) mariadb-up
-	docker compose -f docker-compose.yml exec -T php bash -c "find . -path '*/.git' -prune -o -print0 | xargs -0 chown www-data:www-data"
-	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
-	docker compose -f docker-compose.yml exec -T php cp .env.mariadb .env
-	docker compose -f docker-compose.yml exec -T php php artisan key:generate
-	docker compose -f docker-compose.yml exec -T php php artisan passport:key --force
+	@$(MAKE) app-init ENV_FILE=.env.mariadb
 
 sqlsrv-init:
+	@$(MAKE) exment-ref
 	@$(MAKE) down
 	@$(MAKE) sqlsrv-up
 	@$(MAKE) ps
@@ -49,11 +53,38 @@ sqlsrv-init:
 	docker compose -f docker-compose.yml -f docker-compose.sqlsrv.yml run -T sqlsrv-create-db
 	@$(MAKE) ps
 	@$(MAKE) logs
+	@$(MAKE) app-init ENV_FILE=.env.sqlsrv
+
+# Check out EXMENT_REF (on the host, with git). Nothing when EXMENT_REF is empty.
+exment-ref:
+ifneq ($(EXMENT_REF),)
+	@test -d $(APP_DIR)/exment || git clone -q https://github.com/exceedone/exment.git $(APP_DIR)/exment
+	git -C $(APP_DIR)/exment fetch -q origin $(EXMENT_REF)
+	git -C $(APP_DIR)/exment checkout -q --detach FETCH_HEAD
+	@test -d $(APP_DIR)/exment-admin-core || git clone -q https://github.com/exceedone/exment-admin-core.git $(APP_DIR)/exment-admin-core
+	git -C $(APP_DIR)/exment-admin-core fetch -q origin $(EXMENT_ADMIN_CORE_REF)
+	git -C $(APP_DIR)/exment-admin-core checkout -q --detach FETCH_HEAD
+	@echo "exment: $$(git -C $(APP_DIR)/exment log -1 --oneline)"
+	@echo "exment-admin-core: $$(git -C $(APP_DIR)/exment-admin-core log -1 --oneline)"
+endif
+
+# The steps after the containers are up (ENV_FILE: .env.mysql, .env.mariadb or .env.sqlsrv).
+# artisan runs as root, so .env, storage and bootstrap/cache are given back to www-data at the end:
+# otherwise the web installer stops on "write permission" of .env and the template list fails (500).
+app-init:
+ifneq ($(EXMENT_REF),)
+	docker compose -f docker-compose.yml exec -T php cp composer.dev.json composer.json
+	docker compose -f docker-compose.yml exec -T php cp composer.dev.lock composer.lock
+endif
 	docker compose -f docker-compose.yml exec -T php bash -c "find . -path '*/.git' -prune -o -print0 | xargs -0 chown www-data:www-data"
 	docker compose -f docker-compose.yml exec -T -e COMPOSER_PROCESS_TIMEOUT=600 php composer install
-	docker compose -f docker-compose.yml exec -T php cp .env.sqlsrv .env
+	docker compose -f docker-compose.yml exec -T php cp $(ENV_FILE) .env
 	docker compose -f docker-compose.yml exec -T php php artisan key:generate
 	docker compose -f docker-compose.yml exec -T php php artisan passport:key --force
+	docker compose -f docker-compose.yml exec -T php chown -R www-data:www-data .env storage bootstrap/cache
+ifneq ($(EXMENT_REF),)
+	@docker compose -f docker-compose.yml exec -T php test -L vendor/exceedone/exment || { echo "vendor/exceedone/exment is not the folder exment: check composer.dev.json"; exit 1; }
+endif
 
 # --- Coverage targets -------------------------------------------------------
 # COV_DIR: where per-suite *.cov dumps land (inside the container path).
