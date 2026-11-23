@@ -3,7 +3,9 @@ ARG PHP_VERSION
 FROM php:${PHP_VERSION}-fpm
 
 # install php-ext
-RUN apt-get update && apt-get install -y git wget gnupg vim unzip libxml2-dev libpng-dev libzip-dev libonig-dev default-mysql-client libldap2-dev\
+# gd with FreeType: the 2D barcode labels write their text with imagettftext()
+RUN apt-get update && apt-get install -y git wget gnupg vim unzip libxml2-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev libzip-dev libonig-dev default-mysql-client libldap2-dev\
+  && docker-php-ext-configure gd --with-freetype --with-jpeg\
   && docker-php-ext-install mbstring dom gd zip pdo_mysql ftp ldap\
   && apt-get clean
 
