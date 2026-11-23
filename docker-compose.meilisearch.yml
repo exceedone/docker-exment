@@ -1,0 +1,80 @@
+# Meilisearch (full-text search) for Exment, with the queue worker and the scheduler it needs.
+#   docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.meilisearch.yml up -d
+#   docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.meilisearch.yml exec -u www-data php php artisan exment:meili-setup
+# Set EXMENT_DOCKER_MEILISEARCH_MASTER_KEY in .env first (16 characters or more, e.g. the output of "openssl rand -hex 16").
+#
+# - Meilisearch opens no port to the outside. Only php, the worker and the scheduler reach it, on an inner network without the Internet.
+# - meili-worker runs the queue (real-time sync of the index), scheduler runs "schedule:run" every minute (daily index repair, and the other schedules of Exment).
+services:
+  meilisearch:
+    image: getmeili/meilisearch:${EXMENT_DOCKER_MEILISEARCH_VERSION-v1.10.3}
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${EXMENT_DOCKER_MEILISEARCH_MASTER_KEY:?set EXMENT_DOCKER_MEILISEARCH_MASTER_KEY in .env}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili-data:/meili_data
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    networks:
+      - meili-network
+
+  php:
+    environment:
+      MEILI_MASTER_KEY: ${EXMENT_DOCKER_MEILISEARCH_MASTER_KEY}
+      MEILISEARCH_HOST: http://meilisearch:7700
+    networks:
+      - exment-network
+      - meili-network
+
+  meili-worker:
+    build:
+      context: docker/php
+      args:
+        - PHP_VERSION=${EXMENT_DOCKER_PHP_VERSION}
+    user: www-data
+    working_dir: /var/www/exment
+    command: ["php", "artisan", "queue:work", "--queue=default,meili-reindex", "--max-time=3600", "--tries=3"]
+    volumes:
+      - ./exment-boilerplate:/var/www/exment
+      - ./docker/php/volumes/php.ini:/usr/local/etc/php/php.ini
+    env_file: .env
+    environment:
+      MEILISEARCH_HOST: http://meilisearch:7700
+    depends_on:
+      - php
+      - meilisearch
+    restart: unless-stopped
+    networks:
+      - exment-network
+      - meili-network
+
+  scheduler:
+    build:
+      context: docker/php
+      args:
+        - PHP_VERSION=${EXMENT_DOCKER_PHP_VERSION}
+    user: www-data
+    working_dir: /var/www/exment
+    command: ["sh", "-c", "while true; do php artisan schedule:run >> /dev/null 2>&1; sleep 60; done"]
+    volumes:
+      - ./exment-boilerplate:/var/www/exment
+      - ./docker/php/volumes/php.ini:/usr/local/etc/php/php.ini
+    env_file: .env
+    environment:
+      MEILISEARCH_HOST: http://meilisearch:7700
+    depends_on:
+      - php
+      - meilisearch
+    restart: unless-stopped
+    networks:
+      - exment-network
+      - meili-network
+
+volumes:
+  meili-data:
+
+networks:
+  meili-network:
+    internal: true

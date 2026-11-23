@@ -96,6 +96,34 @@ The file server of Exment can show Word, Excel and PowerPoint files as PDF. The 
 - Exment converts a file the first time its preview is opened (not when it is uploaded) and keeps the PDF; two people opening it at once start one conversion.
 - The image is about 1.5 GB.
 
+### Full-text search with Meilisearch (optional)
+
+Exment can search with [Meilisearch](https://www.meilisearch.com/). `docker-compose.meilisearch.yml` adds Meilisearch, the queue worker that keeps its index up to date, and the scheduler.
+
+1. Put a master key in `.env` (16 characters or more; keep it secret):
+
+    ```
+    EXMENT_DOCKER_MEILISEARCH_MASTER_KEY=<the output of "openssl rand -hex 16">
+    ```
+
+2. Add `-f docker-compose.meilisearch.yml` when you start the containers:
+
+    ```bash
+    $ docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.meilisearch.yml up -d
+    ```
+
+3. Set up Exment for it (once; it can be run again):
+
+    ```bash
+    $ docker compose -f docker-compose.yml -f docker-compose.mysql.yml -f docker-compose.meilisearch.yml exec -u www-data php php artisan exment:meili-setup
+    ```
+
+    It sets the queue to `database` in `exment-boilerplate/.env`, makes the tables, saves the host and the key in the system settings, builds the index, turns the search on and restarts the worker. The command comes with Exment 7.2.2 or later.
+
+- Meilisearch opens no port to the outside. Only php, the worker and the scheduler reach it, on an inner network without the Internet. Its data is in the volume `meili-data`.
+- The scheduler runs `php artisan schedule:run` every minute (the daily repair of the index, and the other schedules of Exment). Do not add another one.
+- Check it with `php artisan exment:meili-health --failed` in the php container.
+
 ## Other commands
 
 | Command | Description |
