@@ -49,8 +49,8 @@ sqlsrv-init:
 	@$(MAKE) sqlsrv-up
 	@$(MAKE) ps
 	@$(MAKE) logs
-	sleep 30
-	docker compose -f docker-compose.yml -f docker-compose.sqlsrv.yml run -T sqlsrv-create-db
+	# (sqlsrv-create-db waits until the server answers)
+	docker compose -f docker-compose.yml -f docker-compose.sqlsrv.yml run --rm -T sqlsrv-create-db
 	@$(MAKE) ps
 	@$(MAKE) logs
 	@$(MAKE) app-init ENV_FILE=.env.sqlsrv

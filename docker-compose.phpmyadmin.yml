@@ -1,6 +1,6 @@
 services:
  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
+    image: phpmyadmin/phpmyadmin:5.2
     env_file: .env
     ports:
       - ${EXMENT_DOCKER_PHPMYADMIN_PORT-8888}:80
