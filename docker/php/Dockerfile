@@ -10,8 +10,8 @@ RUN apt-get update && apt-get install -y git wget gnupg vim unzip libxml2-dev li
   && docker-php-ext-install mbstring dom gd zip pdo_mysql ftp ldap\
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# install pre sql server driver (Microsoft's packages for Debian 13)
-RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
+# install pre sql server driver (Microsoft's packages for Debian 13: signed with the key microsoft-2025.asc, not microsoft.asc)
+RUN curl -fsSL https://packages.microsoft.com/keys/microsoft-2025.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
   && echo "deb [arch=amd64,arm64,armhf signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/13/prod trixie main" > /etc/apt/sources.list.d/msprod.list \
   && apt-get update \
   && apt-get install -y unixodbc-dev libgssapi-krb5-2 \
