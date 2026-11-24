@@ -1,6 +1,6 @@
 services:
   mariadb:
-    image: mariadb:10.4
+    image: mariadb:10.11
     ports:
       - ${EXMENT_DOCKER_MYSQL_PORT-3306}:3306
     volumes:

@@ -1,6 +1,6 @@
 services:
   web:
-    image: nginx:latest
+    image: nginx:1.30
     ports:
       - ${EXMENT_DOCKER_HTTP_PORTS-80}:80
     volumes:

@@ -5,6 +5,21 @@ It supports MySQL, MariaDB and SQL Server.
 
 It is also used by the automated tests (CI) of Exment.
 
+## Versions
+
+| Part | Image | Note |
+|---|---|---|
+| PHP | `php:8.3-fpm-trixie` (Debian 13) | `EXMENT_DOCKER_PHP_VERSION` in `.env`: 8.3 (default) or 8.4. PHP 8.2 security support ends 2026-12-31 |
+| Web | `nginx:1.30` | |
+| MySQL | `mysql:8.4` | |
+| MariaDB | `mariadb:10.11` | |
+| SQL Server | `mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04` | ODBC Driver 18, sqlsrv 5.13 |
+| Redis | `redis:8.4` | optional |
+| phpMyAdmin | `phpmyadmin/phpmyadmin:5.2` | optional |
+| Balancer | `nginxproxy/nginx-proxy:1.11` | optional (was jwilder/nginx-proxy) |
+
+The versions are fixed so that a new image does not change the environment by itself; raise them here with a pull request.
+
 ## Requirements
 
 - Docker with the Compose plugin (`docker compose`)
