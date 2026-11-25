@@ -14,18 +14,24 @@ services:
       MSSQL_COLLATION: Japanese_CI_AS
       # MSSQL_LCID: 1041
 
-  # makes the database: waits until the server answers (at most 2 minutes), with the
-  # sqlcmd of the server image (mssql-tools18; -C: the certificate of the server is its own)
+  # makes the database: tries again until it is made (at most 2 minutes), with the
+  # sqlcmd of the server image (mssql-tools18; -C: the certificate of the server is its own).
+  # The server answers "SELECT 1" while it still upgrades master on its first start, and a
+  # CREATE DATABASE then can be the victim of a deadlock (Msg 1205): so the CREATE is retried.
   sqlsrv-create-db:
     build: docker/sqlsrv2022
     entrypoint: ["/bin/bash", "-c"]
     command:
       - |
-        for i in $$(seq 1 60); do
-          /opt/mssql-tools18/bin/sqlcmd -C -S sqlsrv -U sa -P "$$EXMENT_DOCKER_SQLSRV_ROOT_PASSWORD" -Q "SELECT 1" > /dev/null 2>&1 && break
+        create_db() {
+          /opt/mssql-tools18/bin/sqlcmd -C -b -S sqlsrv -U sa -P "$$EXMENT_DOCKER_SQLSRV_ROOT_PASSWORD" -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '$$EXMENT_DOCKER_SQLSRV_DATABASE') CREATE DATABASE [$$EXMENT_DOCKER_SQLSRV_DATABASE] COLLATE Japanese_CI_AS"
+        }
+        for i in $$(seq 1 59); do
+          create_db > /dev/null 2>&1 && exit 0
           sleep 2
         done
-        /opt/mssql-tools18/bin/sqlcmd -C -b -S sqlsrv -U sa -P "$$EXMENT_DOCKER_SQLSRV_ROOT_PASSWORD" -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '$$EXMENT_DOCKER_SQLSRV_DATABASE') CREATE DATABASE [$$EXMENT_DOCKER_SQLSRV_DATABASE] COLLATE Japanese_CI_AS"
+        # the last try shows the error
+        create_db
     networks:
       - exment-network
     env_file: .env
