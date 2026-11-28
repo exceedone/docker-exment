@@ -1,0 +1,16 @@
+# The mysql and mysqldump commands in this image are the MariaDB 11.8 client
+# (default-mysql-client on Debian trixie). Since MariaDB 11.4 these clients
+# verify the server certificate by default, so they cannot connect to the
+# MySQL 8.x container (its certificate is self-signed) or to a MariaDB 10.x
+# container (it offers no TLS). Exment runs them for exment:backup and
+# exment:restore.
+#
+# With verification off, the client still uses TLS when the server offers it
+# and connects without TLS when the server does not.
+#
+# Only the MariaDB clients read [client-mariadb]. To verify the certificate,
+# pass --ssl-verify-server-cert (with --ssl-ca), or set
+# ssl-verify-server-cert=1 in a later file, e.g.
+# /etc/mysql/mariadb.conf.d/99-local.cnf or ~/.my.cnf.
+[client-mariadb]
+ssl-verify-server-cert=0

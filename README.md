@@ -74,6 +74,21 @@ $ make sqlsrv-up
 
 The SQL Server `sa` password is `EXMENT_DOCKER_SQLSRV_ROOT_PASSWORD` in `.env`. It must be a complex password, and it must match `DB_PASSWORD` in `exment-boilerplate/.env.sqlsrv`.
 
+### The mysql and mysqldump clients in the PHP container
+
+Exment runs `mysqldump` and `mysql` for `exment:backup` and `exment:restore`. In the PHP image they are the MariaDB 11.8 client (`default-mysql-client` on Debian trixie). Since MariaDB 11.4 this client verifies the server certificate by default. The MySQL 8.x container has a self-signed certificate and a MariaDB 10.x container offers no TLS, so without a setting the client cannot connect to them and the backup files come out empty.
+
+The image therefore has `/etc/mysql/mariadb.conf.d/90-exment-client.cnf` (from `docker/php/mariadb-client.cnf`):
+
+```
+[client-mariadb]
+ssl-verify-server-cert=0
+```
+
+The client still uses TLS when the server offers it, and connects without TLS when the server does not. This works with `mysql:8.4`, `mysql:8.0`, `mariadb:10.4`, `mariadb:10.11` and `mariadb:11.4`. Only the client is set; the database servers are not changed.
+
+To verify the certificate (e.g. for a database outside this stack), pass `--ssl-verify-server-cert --ssl-ca=...`, or put `ssl-verify-server-cert=1` under `[client-mariadb]` in a file that is read later, such as `/etc/mysql/mariadb.conf.d/99-local.cnf` or `~/.my.cnf`. With `docker-compose.yml`, `docker/php/volumes/mysql-client.cnf` (mounted at `/etc/mysql/conf.d/client.cnf`) is read too.
+
 ### Previews of Office files (optional)
 
 The file server of Exment can show Word, Excel and PowerPoint files as PDF. The conversion runs in a container of its own (`office`: [Gotenberg](https://gotenberg.dev/) with LibreOffice only), not in the PHP container.
