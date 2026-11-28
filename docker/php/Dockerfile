@@ -9,6 +9,11 @@ RUN apt-get update && apt-get install -y git wget gnupg vim unzip libxml2-dev li
   && docker-php-ext-install mbstring dom gd zip pdo_mysql ftp ldap\
   && apt-get clean
 
+# the MariaDB client: see mariadb-client.cnf
+# (chmod: the client ignores a world-writable file, e.g. one built from a Windows drive)
+COPY mariadb-client.cnf /etc/mysql/mariadb.conf.d/90-exment-client.cnf
+RUN chmod 0644 /etc/mysql/mariadb.conf.d/90-exment-client.cnf
+
 # install pre sql server driver
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
   && echo "deb [arch=amd64,arm64,armhf signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/msprod.list \
